@@ -68,7 +68,11 @@
 
         <article class="card">
           <header class="card-head">
-            <div><h2>Fuel consumption</h2><p class="sub">L/100 km per fill-up (lower is better)</p></div>
+            <div><h2>Fuel consumption</h2><p id="cons-sub" class="sub"></p></div>
+            <div id="unit-seg" class="seg" role="group" aria-label="Consumption unit">
+              <button type="button" data-unit="l100">L/100 km</button>
+              <button type="button" data-unit="kml">km/L</button>
+            </div>
           </header>
           <div class="chart"><canvas id="chart-cons"></canvas></div>
           <p id="cons-note" class="note" hidden>Needs at least two fill-ups.</p>
@@ -96,7 +100,7 @@
           <thead>
             <tr>
               <th>Date</th><th class="num">Litres</th><th class="num">Odometer</th>
-              <th class="num">€/L</th><th class="num">Total</th><th class="num">L/100 km</th><th></th>
+              <th class="num">€/L</th><th class="num">Total</th><th id="cons-th" class="num"></th><th></th>
             </tr>
           </thead>
           <tbody></tbody>

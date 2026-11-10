@@ -50,6 +50,14 @@ rewrite); get the APK from GitHub (sideload, no Play Store).
 - NOT verified: running the APK on a phone/emulator (none available in the build
   environment) – in particular the share-sheet export and CSV import picker.
 
+## Change: consumption unit switch (2026-11-10)
+User asked for an option to switch between L/100 km and km/L.
+- Switch sits on the Fuel consumption chart card; it changes the chart, the
+  "Avg consumption" tile and the consumption column in the Fill-ups table.
+- Choice is remembered on the device; default stays L/100 km. (Placement and default
+  chosen by Claude.)
+- Verified in a browser (values, persistence after reload) and by a unit test; not on a phone.
+
 ## Open / ideas
 - First thing to check on the phone: Export CSV and Import CSV.
 - Possible later: direct .apk download via a GitHub Release, partial-fill flag,

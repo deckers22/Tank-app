@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   withDerived, monthly, summary, monthComparison, cumulative,
-  validateEntry, toCSV, parseCSV, filterRange, toISODate,
+  validateEntry, toCSV, parseCSV, filterRange, toISODate, consumptionIn,
 } from '../www/js/stats.js';
 
 const entries = [
@@ -65,6 +65,15 @@ test('monthComparison', () => {
   assert.equal(c.lastMonth, 85.5);
   const jan = monthComparison(withDerived(entries), new Date(2026, 0, 15));
   assert.equal(jan.lastMonth, 0); // December 2025
+});
+
+test('consumptionIn converts L/100 km to km/L', () => {
+  assert.equal(consumptionIn('l100', 5), 5);
+  assert.equal(consumptionIn('kml', 5), 20);
+  assert.equal(consumptionIn('kml', null), null);
+  // average km/L equals distance / litres
+  const s = summary(withDerived(entries));
+  assert.equal(consumptionIn('kml', s.avgConsumption), 1800 / 90);
 });
 
 test('cumulative', () => {

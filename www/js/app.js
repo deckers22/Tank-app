@@ -1,7 +1,7 @@
-import { loadEntries, saveEntries, newId } from './store.js';
+import { loadEntries, saveEntries, newId, loadUnit, saveUnit } from './store.js';
 import {
   toISODate, dateToTime, withDerived, filterRange, monthly, summary,
-  monthComparison, cumulative, validateEntry, toCSV, parseCSV,
+  monthComparison, cumulative, validateEntry, toCSV, parseCSV, consumptionIn,
 } from './stats.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -11,6 +11,7 @@ const $$ = (sel) => [...document.querySelectorAll(sel)];
 let entries = loadEntries();
 let range = 'all';
 const modes = { litres: 'month', cost: 'month' };
+let unit = loadUnit(); // 'l100' or 'kml'
 let editingId = null;
 const charts = {};
 
@@ -24,6 +25,11 @@ const eur = (v) => `€ ${fmt2.format(v)}`;
 const dateFmt = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 const monthFmt = new Intl.DateTimeFormat(undefined, { month: 'short', year: '2-digit' });
 const fmtDate = (iso) => dateFmt.format(dateToTime(iso));
+const UNITS = {
+  l100: { label: 'L/100 km', sub: 'L/100 km per fill-up (lower is better)' },
+  kml: { label: 'km/L', sub: 'km per litre per fill-up (higher is better)' },
+};
+const fmtCons = (l100) => (l100 == null ? '–' : fmt1.format(consumptionIn(unit, l100)));
 const fmtMonth = (key) => monthFmt.format(dateToTime(`${key}-01`));
 
 // ---- Navigation ----
@@ -44,7 +50,7 @@ $$('.filters .chip').forEach((chip) =>
   })
 );
 
-$$('.seg').forEach((seg) =>
+$$('.seg[data-chart]').forEach((seg) =>
   seg.addEventListener('click', (ev) => {
     const btn = ev.target.closest('button');
     if (!btn) return;
@@ -53,6 +59,14 @@ $$('.seg').forEach((seg) =>
     renderStats();
   })
 );
+
+$('#unit-seg').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('button');
+  if (!btn) return;
+  unit = btn.dataset.unit;
+  saveUnit(unit);
+  render();
+});
 
 // ---- Entry dialog ----
 const dialog = $('#entry-dialog');
@@ -178,6 +192,10 @@ $('#import-file').addEventListener('change', async (ev) => {
 
 // ---- Rendering ----
 function render() {
+  [...$('#unit-seg').children].forEach((b) =>
+    b.setAttribute('aria-pressed', String(b.dataset.unit === unit)));
+  $('#cons-sub').textContent = UNITS[unit].sub;
+  $('#cons-th').textContent = UNITS[unit].label;
   renderEntries();
   if (!$('#view-stats').hidden) renderStats();
 }
@@ -201,7 +219,7 @@ function renderEntries() {
       cell(fmt0.format(e.odometer), 'num');
       cell(fmt3.format(e.pricePerLitre), 'num');
       cell(eur(e.cost), 'num');
-      cell(e.consumption == null ? '–' : fmt1.format(e.consumption), 'num');
+      cell(fmtCons(e.consumption), 'num');
       const td = document.createElement('td');
       const btn = Object.assign(document.createElement('button'), {
         type: 'button', className: 'btn', textContent: 'Edit',
@@ -230,7 +248,7 @@ function renderTiles(inRange, all) {
     ['Total spent', eur(s.totalCost), `${s.count} fill-up${s.count === 1 ? '' : 's'}`],
     ['Total litres', fmt0.format(s.totalLitres), 'L'],
     ['Distance driven', fmt0.format(s.distance), 'km between fill-ups'],
-    ['Avg consumption', s.avgConsumption == null ? '–' : fmt1.format(s.avgConsumption), 'L/100 km'],
+    ['Avg consumption', fmtCons(s.avgConsumption), UNITS[unit].label],
     ['Avg price', s.avgPrice == null ? '–' : `€ ${fmt3.format(s.avgPrice)}`, 'per litre'],
     ['Avg fill-up', s.avgFillCost == null ? '–' : eur(s.avgFillCost), 'per visit'],
     ['This month', eur(cmp.thisMonth), `last month ${eur(cmp.lastMonth)}`],
@@ -290,8 +308,8 @@ function renderStats() {
   $('#cons-note').hidden = cons.length > 0;
   $('#chart-cons').parentElement.hidden = cons.length === 0;
   if (cons.length)
-    lineChart('chart-cons', cons.map((e) => ({ x: dateToTime(e.date), y: e.consumption })),
-      color('--series-cons'), (v) => `${fmt1.format(v)} L/100 km`);
+    lineChart('chart-cons', cons.map((e) => ({ x: dateToTime(e.date), y: consumptionIn(unit, e.consumption) })),
+      color('--series-cons'), (v) => `${fmt1.format(v)} ${UNITS[unit].label}`);
 
   lineChart('chart-price', points(inRange.map((e) => e.pricePerLitre)), color('--series-price'),
     (v) => `€ ${fmt3.format(v)}`);

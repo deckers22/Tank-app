@@ -39,6 +39,15 @@ export function withDerived(entries) {
   });
 }
 
+/**
+ * Converts L/100 km to the chosen unit: 'l100' (unchanged) or 'kml' (km per litre).
+ * null stays null.
+ */
+export function consumptionIn(unit, l100) {
+  if (l100 == null) return null;
+  return unit === 'kml' ? 100 / l100 : l100;
+}
+
 /** Keep entries with from <= date <= to (ISO strings; either bound may be null). */
 export function filterRange(derived, from, to) {
   return derived.filter(

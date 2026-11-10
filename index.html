@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tank</title>
+  <meta name="description" content="Log fuel fill-ups and see consumption and cost statistics.">
+  <meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Tank</h1>
+    <button id="add-btn" class="btn primary" type="button">+ Add fill-up</button>
+  </header>
+
+  <main>
+    <!-- Statistics -->
+    <section id="view-stats" class="view">
+      <div id="stats-empty" class="empty" hidden>
+        <p><strong>No fill-ups yet.</strong></p>
+        <p>Add your first one to start seeing statistics.</p>
+      </div>
+
+      <div id="stats-body">
+        <div class="filters" role="group" aria-label="Period">
+          <button type="button" class="chip" data-range="all" aria-pressed="true">All time</button>
+          <button type="button" class="chip" data-range="12m" aria-pressed="false">Last 12 months</button>
+          <button type="button" class="chip" data-range="year" aria-pressed="false">This year</button>
+        </div>
+
+        <div id="tiles" class="tiles"></div>
+
+        <article class="card">
+          <header class="card-head">
+            <div><h2>Litres</h2><p id="litres-sub" class="sub"></p></div>
+            <div class="seg" role="group" aria-label="Litres view" data-chart="litres">
+              <button type="button" data-mode="month" aria-pressed="true">Per month</button>
+              <button type="button" data-mode="fill" aria-pressed="false">Per fill-up</button>
+              <button type="button" data-mode="cum" aria-pressed="false">Cumulative</button>
+            </div>
+          </header>
+          <div class="chart"><canvas id="chart-litres"></canvas></div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <div><h2>Money spent</h2><p id="cost-sub" class="sub"></p></div>
+            <div class="seg" role="group" aria-label="Money view" data-chart="cost">
+              <button type="button" data-mode="month" aria-pressed="true">Per month</button>
+              <button type="button" data-mode="fill" aria-pressed="false">Per fill-up</button>
+              <button type="button" data-mode="cum" aria-pressed="false">Cumulative</button>
+            </div>
+          </header>
+          <div class="chart"><canvas id="chart-cost"></canvas></div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <div><h2>Odometer</h2><p class="sub">Kilometres on the clock at each fill-up</p></div>
+          </header>
+          <div class="chart"><canvas id="chart-odo"></canvas></div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <div><h2>Fuel consumption</h2><p class="sub">L/100 km per fill-up (lower is better)</p></div>
+          </header>
+          <div class="chart"><canvas id="chart-cons"></canvas></div>
+          <p id="cons-note" class="note" hidden>Needs at least two fill-ups.</p>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <div><h2>Price per litre</h2><p class="sub">What you paid at each fill-up</p></div>
+          </header>
+          <div class="chart"><canvas id="chart-price"></canvas></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Entries -->
+    <section id="view-entries" class="view" hidden>
+      <div class="toolbar">
+        <button id="export-btn" class="btn" type="button">Export CSV</button>
+        <button id="import-btn" class="btn" type="button">Import CSV</button>
+        <input id="import-file" type="file" accept=".csv,text/csv" hidden>
+      </div>
+      <p id="entries-empty" class="empty" hidden>No fill-ups yet.</p>
+      <div class="table-wrap">
+        <table id="entries-table">
+          <thead>
+            <tr>
+              <th>Date</th><th class="num">Litres</th><th class="num">Odometer</th>
+              <th class="num">€/L</th><th class="num">Total</th><th class="num">L/100 km</th><th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabs" aria-label="Sections">
+    <button type="button" data-view="stats" aria-current="page">Statistics</button>
+    <button type="button" data-view="entries">Fill-ups</button>
+  </nav>
+
+  <dialog id="entry-dialog" aria-labelledby="dialog-title">
+    <form id="entry-form" method="dialog" novalidate>
+      <h2 id="dialog-title">Add fill-up</h2>
+      <label>Date
+        <input id="f-date" type="date" required>
+      </label>
+      <label>Litres
+        <input id="f-litres" type="number" inputmode="decimal" step="0.01" min="0" required placeholder="e.g. 42.5">
+      </label>
+      <label>Odometer (km)
+        <input id="f-odo" type="number" inputmode="numeric" step="1" min="0" required>
+      </label>
+      <label>Price per litre (€)
+        <input id="f-price" type="number" inputmode="decimal" step="0.001" min="0" required>
+      </label>
+      <p class="total">Total: <strong id="f-total">–</strong></p>
+      <p id="f-error" class="error" role="alert" hidden></p>
+      <div class="actions">
+        <button id="f-delete" class="btn danger" type="button" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button id="f-cancel" class="btn" type="button">Cancel</button>
+        <button class="btn primary" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="vendor/chart.umd.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -58,6 +58,13 @@ User asked for an option to switch between L/100 km and km/L.
   chosen by Claude.)
 - Verified in a browser (values, persistence after reload) and by a unit test; not on a phone.
 
+## Data import (2026-11-10)
+User shared 27 fill-ups from a note (DD-MM dates); converted to an import CSV
+(file sent in chat, not committed). Assumption by Claude: user said "all 2026", but the
+odometer only rises if Sept–Dec rows are 2025, so those were dated 2025.
+Partial fills in the data (5 L / 5.25 L top-ups etc.) produce odd per-fill-up
+consumption points → strengthens the case for a "partial fill" flag.
+
 ## Open / ideas
 - First thing to check on the phone: Export CSV and Import CSV.
 - Possible later: direct .apk download via a GitHub Release, partial-fill flag,

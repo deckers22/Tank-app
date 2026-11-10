@@ -128,12 +128,27 @@ function toast(message) {
 }
 
 // ---- Export / import ----
-$('#export-btn').addEventListener('click', () => {
+// Inside the Android app (Capacitor) there is no browser download: write the
+// file to the app cache and hand it to the Android share sheet instead.
+const native = window.Capacitor?.isNativePlatform?.() ? window.Capacitor : null;
+
+$('#export-btn').addEventListener('click', async () => {
   if (!entries.length) return toast('Nothing to export yet.');
-  const url = URL.createObjectURL(new Blob([toCSV(entries)], { type: 'text/csv' }));
-  const a = Object.assign(document.createElement('a'), {
-    href: url, download: `tank-${toISODate(new Date())}.csv`,
-  });
+  const name = `tank-${toISODate(new Date())}.csv`;
+  const csv = toCSV(entries);
+  if (native) {
+    try {
+      const { uri } = await native.nativePromise('Filesystem', 'writeFile', {
+        path: name, data: csv, directory: 'CACHE', encoding: 'utf8',
+      });
+      await native.nativePromise('Share', 'share', { title: name, files: [uri] });
+    } catch (err) {
+      if (!/cancel/i.test(err?.message ?? '')) toast(`Export failed: ${err?.message ?? err}`);
+    }
+    return;
+  }
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  const a = Object.assign(document.createElement('a'), { href: url, download: name });
   a.click();
   URL.revokeObjectURL(url);
 });
@@ -364,4 +379,4 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
 
 render();
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (!native && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

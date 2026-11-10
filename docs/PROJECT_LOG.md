@@ -8,7 +8,7 @@ Statistics: litres over time and per month, money spent likewise, mileage over t
 plus suggestions.
 
 ## Decisions (answered by the user)
-- Form: web app / PWA.
+- Form: web app / PWA (later changed to Android APK, see below).
 - Storage: on device (localStorage) with CSV export/import. No cloud sync.
 - Extra stats: fuel consumption, price-per-litre trend, summary tiles. (Cost per km not chosen.)
 - This log lives in the repo as markdown.
@@ -34,7 +34,23 @@ plus suggestions.
 - 12 unit tests pass; browser run (phone + desktop dark) of add, validation, edit,
   delete, export, import, offline reload with no console errors.
 
+## Change: Android (2026-11-10)
+User: "App should be android". Answers: wrap the existing app as an APK (not a native
+rewrite); get the APK from GitHub (sideload, no Play Store).
+
+- Web files moved to `www/`; Capacitor 8 Android project in `android/`
+  (app id `nl.deckers.tank` – chosen by Claude, changing it later means a fresh install).
+- CSV export in the Android app goes through the share sheet (Filesystem + Share plugins).
+- `.github/workflows/android.yml` builds a debug APK on every push → artifact `tank-apk`.
+- Fixed signing key committed (`android/app/debug.keystore`, standard debug password) so
+  builds update each other without losing data. Anyone with repo access can sign
+  builds with it; fine for personal sideloading, not for Play Store.
+- Verified: APK builds locally (min Android 7 / API 24, target API 36), contains the web
+  assets, signed with the committed key; web version re-tested in a browser.
+- NOT verified: running the APK on a phone/emulator (none available in the build
+  environment) – in particular the share-sheet export and CSV import picker.
+
 ## Open / ideas
-- Not hosted yet (GitHub Pages would work from the repo root; needs the code on the
-  Pages branch).
-- Possible later: partial-fill flag, cost per km, multiple cars, cloud sync, Dutch UI.
+- First thing to check on the phone: Export CSV and Import CSV.
+- Possible later: direct .apk download via a GitHub Release, partial-fill flag,
+  cost per km, multiple cars, cloud sync, Dutch UI, Play Store release signing.

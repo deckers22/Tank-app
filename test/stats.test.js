@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   withDerived, monthly, summary, monthComparison, cumulative,
   validateEntry, toCSV, parseCSV, filterRange, toISODate,
-} from '../js/stats.js';
+} from '../www/js/stats.js';
 
 const entries = [
   { id: 'b', date: '2026-02-10', litres: 40, odometer: 10800, pricePerLitre: 2.0 },

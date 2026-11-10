@@ -3,7 +3,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test",
-    "start": "python3 -m http.server 8000"
+    "test": "node --test test/*.test.js",
+    "start": "python3 -m http.server 8000 --directory www",
+    "android:sync": "cap sync android",
+    "android:apk": "cap sync android && cd android && ./gradlew assembleDebug"
+  },
+  "version": "1.0.0",
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.0"
   }
 }
